@@ -48,20 +48,23 @@ class Profile extends Controller
             $commentsArray[$i]['sub_comments'] = [];
         }
 
+        // dd($sub_commentsArray);
 
         for ($i=0; $i < count($commentsArray); $i++) { 
             $items = [];
             $comment_id = $commentsArray[$i]['id'];
-            for ($j=0; $j < count($sub_commentsArray); $j++) { 
-                $sub_comment_id = $sub_commentsArray[$j]['parent_comment'];
-                if ($comment_id === $sub_comment_id) {
-                    $items[] = [
-                        'id' => $sub_comment_id,
-                        'owner' => User::find($userId)->first()->username,
-                        'comment' => $sub_commentsArray[$j]['comment']
-                    ]; 
-                    $commentsArray[$i]['sub_comments'] = $items;
-                }
+            for ($j=0; $j < count($sub_commentsArray); $j++) {
+                if (isset($sub_comment[$j])) {
+                    $sub_comment_id = $sub_commentsArray[$j]['parent_comment'];
+                    if ($comment_id === $sub_comment_id) {
+                        $items[] = [
+                            'id' => $sub_comment_id,
+                            'owner' => User::find($userId)->first()->username,
+                            'comment' => $sub_commentsArray[$j]['comment']
+                        ]; 
+                        $commentsArray[$i]['sub_comments'] = $items;
+                    }
+                 } 
             }
         }
 
@@ -151,7 +154,7 @@ class Profile extends Controller
     {
         $userId = Auth::id();
         $desc = $req->desc;
-        $page = Pages::all()->where('owner',$userId)[0];
+        $page = Pages::all()->where('owner',$userId)->first();
 
         $page->desc = $desc;
         if ($page->save()) {
