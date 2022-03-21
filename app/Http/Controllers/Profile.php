@@ -21,7 +21,7 @@ class Profile extends Controller
     public function index(Request $req)
     {
         $userId = Auth::id();
-        $user = User::find($userId);
+        $user = User::all()->where('id',$userId)->first();
         $page = Pages::find($userId);
         $this->countVisitors($page->id);
         $this->countComments($page->id,$userId);
@@ -48,24 +48,37 @@ class Profile extends Controller
             $commentsArray[$i]['sub_comments'] = [];
         }
 
-        // dd($sub_commentsArray);
 
         for ($i=0; $i < count($commentsArray); $i++) { 
             $items = [];
             $comment_id = $commentsArray[$i]['id'];
-            for ($j=0; $j < count($sub_commentsArray); $j++) {
-                if (isset($sub_comment[$j])) {
-                    $sub_comment_id = $sub_commentsArray[$j]['parent_comment'];
-                    if ($comment_id === $sub_comment_id) {
-                        $items[] = [
-                            'id' => $sub_comment_id,
-                            'owner' => User::find($userId)->first()->username,
-                            'comment' => $sub_commentsArray[$j]['comment']
-                        ]; 
-                        $commentsArray[$i]['sub_comments'] = $items;
-                    }
-                 } 
+
+            foreach($sub_commentsArray as $key => $sc){  
+                if($comment_id === $sc['parent_comment']){
+                    $items[] = [
+                        'id' => $key,
+                        'owner' => $user->username,
+                        'comment' => $sc['comment']
+                    ]; 
+                    $commentsArray[$i]['sub_comments'] = $items;                   
+                }
             }
+
+            // bug dikarenakan $sub_commentArray's index tidak dimulai dari index 0 namun index = id
+            // maka for digandi dengan foreach
+            // for ($j=0; $j < count($sub_commentsArray); $j++) {
+            //     if (isset($sub_commentsArray[$j])) {
+            //         $sub_comment_id = $sub_commentsArray[$j]['parent_comment'];
+            //         if ($comment_id === $sub_comment_id) {
+            //             $items[] = [
+            //                 'id' => $sub_comment_id,
+            //                 'owner' => User::find($userId)->first()->username,
+            //                 'comment' => $sub_commentsArray[$j]['comment']
+            //             ]; 
+            //             $commentsArray[$i]['sub_comments'] = $items;
+            //         }
+            //      } 
+            // }
         }
 
         $comments = $this->paginate($commentsArray,5);
